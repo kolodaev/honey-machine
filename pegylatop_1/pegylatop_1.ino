@@ -1,18 +1,15 @@
 #include <Adafruit_GFX.h>//библиотека дисплея
 #include <Adafruit_PCD8544.h>
-// Software SPI (slower updates, more flexible pin options):
-// pin 7 - Serial clock out (SCLK)
-// pin 6 - Serial data out (DIN)
-// pin 5 - Data/Command select (D/C)
-// pin 4 - LCD chip select (CS)
-// pin 3 - LCD reset (RST)
-//Adafruit_PCD8544 display = Adafruit_PCD8544(7, 6, 5, 4, 3);
-Adafruit_PCD8544 display = Adafruit_PCD8544(3, 4, 5, 6, 7);//пины дисплея
-#include "Keypad.h" //Библиотека  клавиотурі
+#define CLK 3
+#define DIN 4
+#define DC 5
+#define CE 6
+#define RST 7
+Adafruit_PCD8544 display = Adafruit_PCD8544(CLK, DIN, DC, CE, RST);//пины дисплея
+#include "Keypad.h" //Библиотека  клавиотуры
 
 const uint8_t pwnPin = 11;  	//пины шима выход
 const uint8_t analogPin = A8;  	//пин вход резистора А8
-const uint8_t k_res = 100;		//коэфициент резистора
 
 uint16_t ADCval = 0;       		//обналяетя переменая
 double pwm = 0; 		//
@@ -34,7 +31,7 @@ char keymap[Rows][Cols]=
 
 // соединения клавиатуры с выводами Arduino задаются так:
 byte rPins[Rows]= {A7,A6,A5,A4}; // строки с 0 по 3
-byte cPins[Cols]= {A3,A2,A1,A0};    // столбцы с 0 по 3
+byte cPins[Cols]= {A3,A2,A1,A0}; // столбцы с 0 по 3
 
 // команда для библиотеки клавиатуры
 // инициализирует экземпляр класса Keypad
@@ -49,7 +46,7 @@ void setup()
 	Serial.begin(9600);  // инициализация монитора последовательного порта
 	inicial_LCD(); //Старт LCD
 	
-	pinMode(pwnPin, OUTPUT);       //присваеваю пину выхо
+	pinMode(pwnPin, OUTPUT);       //присваеваю пину тип - выход
 }
 
 //---------------------------------------------------------------------
@@ -57,32 +54,31 @@ void setup()
 //---------------------------------------------------------------------
   void loop()
 {
-	
-	
 	char keypressed = kpd.getKey(); // Если кнопка нажата, эта кнопка сохраняется в переменной keypressed.
 	if (keypressed != NO_KEY)		// Если keypressed не равна NO_KEY, то выводим значение в последовательный порт.
 	{ 
 		Serial.println(keypressed);
 	}
 
-	ADCval = analogRead(analogPin);  	//вал присвается считывание аналового ввода 0-1024
-	ADCval = ADCval/1024.0*k_res;
-	//pwm = (pwnPin, ADCval/ 10.24);     //проценті шима переменая шим
-	analogWrite(pwnPin, ADCval / 4);   //выход шима 11 порт 0-256
+	ADCval = analogRead(analogPin);  	//вал присвается считывание аналового ввода 0-1023
+	pwm = ADCval/1024.0*100;          // Пропорция. Кол-во бит на 1%
+	analogWrite(pwnPin, pwm / 4);     // Так как ШИМ от 0-256, а аналоговій вход от 0 - 1023, делим на 4
 	start_LCD = millis();
-	if (start_LCD - last_start_LCD) < 1000) // если прошла 1 сек.(1000 циклов) вівести на экран
+	if ((start_LCD - last_start_LCD) > 1000) // если прошла 1 сек.(1000 циклов) вівести на экран
 	{
 		display.clearDisplay();         //очистка дисплея
-		display.print(F("nkodep  "));      //вывод на єкран слова єнкодер
+		display.print(F("ADC:  "));     //вывод на єкран слова єнкодер
 		display.println(ADCval);        //вывод на экран переменой вал
-		display.print(F("pwm     "));      //вівод на єкран слова шим
+		display.print(F("PWM:  "));     //вывод на єкран слова шим
 		display.print(pwm);             //значения на єкране шим 0-100%
-		display.print(F(" %"));             //на єкране %
+		display.println(F(" %"));       //на єкране %
 		display.print(keypressed);
 		delay(400);                    	//временая задержка
 		display.display();              //инициолизация дисплея
 		last_start_LCD = millis();
 	}
+ //Выбрасываем в осцилограф сигнал идущий на транзистор
+ Serial.println(analogRead(pwnPin));
 }
 
 void inicial_LCD ()
@@ -90,10 +86,10 @@ void inicial_LCD ()
 	// инициализация и очистка дисплея
 	display.begin();              //инециолизация драйвера дисплея 
 	display.clearDisplay();       //очистка дисплея
-    display.display();            //функция передачи информации на икран
-    display.setContrast(50);      // установка контраста
-    //delay(1000);                 //временая задержка
-    display.setTextSize(1);      // установка размера шрифта
-    display.setTextColor(BLACK); // установка цвета текста
-    display.setCursor(0,0);      // установка позиции курсора
+  display.display();            //функция передачи информации на икран
+  display.setContrast(50);      // установка контраста
+  //delay(1000);                 //временая задержка
+  display.setTextSize(1);      // установка размера шрифта
+  display.setTextColor(BLACK); // установка цвета текста
+  display.setCursor(0,0);      // установка позиции курсора
 }

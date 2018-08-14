@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+*.workspace
+
+*.pdsbak
+
+*.hex
