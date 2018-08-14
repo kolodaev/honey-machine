@@ -1,6 +1,13 @@
 #include <Adafruit_GFX.h>//библиотека дисплея
 #include <Adafruit_PCD8544.h>
-Adafruit_PCD8544 display = Adafruit_PCD8544(7, 6, 5, 4, 3);//пины дисплея
+// Software SPI (slower updates, more flexible pin options):
+// pin 7 - Serial clock out (SCLK)
+// pin 6 - Serial data out (DIN)
+// pin 5 - Data/Command select (D/C)
+// pin 4 - LCD chip select (CS)
+// pin 3 - LCD reset (RST)
+//Adafruit_PCD8544 display = Adafruit_PCD8544(7, 6, 5, 4, 3);
+Adafruit_PCD8544 display = Adafruit_PCD8544(3, 4, 5, 6, 7);//пины дисплея
 #include "Keypad.h" //Библиотека  клавиотурі
 
 const uint8_t pwnPin = 11;  	//пины шима выход
@@ -33,7 +40,7 @@ byte cPins[Cols]= {A3,A2,A1,A0};    // столбцы с 0 по 3
 // инициализирует экземпляр класса Keypad
 Keypad kpd= Keypad(makeKeymap(keymap), rPins, cPins, Rows, Cols);
 
-uint8_t start_LCD = 0, last_start_LCD; //переменная таймера дисплея
+uint8_t start_LCD = 0, last_start_LCD = 0; //переменная таймера дисплея
 //---------------------------------------------------------------------
 // Цикл настроек при старте
 //---------------------------------------------------------------------
@@ -90,5 +97,3 @@ void inicial_LCD ()
     display.setTextColor(BLACK); // установка цвета текста
     display.setCursor(0,0);      // установка позиции курсора
 }
-
-
